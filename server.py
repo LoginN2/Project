@@ -1,25 +1,30 @@
-import socket
 import requests
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+api = 'e1424507559b9824cadf8743620a128e'
 
 
-API_KEY = ""
-server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server_address = ('localhost', 8000)
-server_socket.bind(server_address)
-server_socket.listen(1)
-print('Сервер запущен на {}:{}'.format(*server_address))
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    if request.method == 'POST':
+        city = request.form['city']
+        return get_weather(city)
 
-while True:
-    print('Ожидание соединения...')
-    connection, client_address = server_socket.accept()
+
+
+@app.route('/weather', methods=['GET'])
+def get_weather(city=None):
+    if city is None:
+        city = request.args.get('city')
+
     try:
-        print('Соединение с:', client_address)
-        data = connection.recv(1024).decode()
-        url = f"http://api.openweathermap.org/data/2.5/weather?q={data}&appid={API_KEY}&units=metric"
-        response = requests.get(url).json()
-        weather_data = f"Погода в городе {data}: {response['weather'][0]['description']}\n" \
-                       f"Температура: {response['main']['temp']}°C\n" \
-                       f"Ощущается как: {response['main']['feels_like']}°C"
-        connection.sendall(weather_data.encode())
-    finally:
-        connection.close()
+        r = requests.get(f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={api}&units=metric&lang=ru")
+        data = r.json()
+        return data
+    except Exception as ex:
+        return jsonify({'error': str(ex)}), 500
+
+
+if __name__ == '__main__':
+    app.run(debug=True)
