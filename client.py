@@ -1,35 +1,59 @@
-from tkinter import *
 import requests
+from tkinter import *
 
-root = Tk()
-
+# Функция для получения погоды
 def get_weather():
-    city = cityField.get()
-    key = '642064cb0aec35f1a6712887b8ccc74a'
-    url = 'http://api.openweathermap.org/data/2.5/weather'
-    params = {'APPID': key, 'q': city, 'units': 'metric'}
-    result = requests.get(url, params=params)
-    weather = result.json()
-    info['text'] = f"{str(weather['name'])}: {weather['main']['temp']}°C\n{weather['weather'][0]['main']}: {weather['main']['feels_like']}°C"
+    city = city_entry.get()
+    if city:
+        try:
+            url = f"http://localhost:5000/weather?city={city}"
+            response = requests.get(url)
+            response.raise_for_status()
+            data = response.json()
+            if 'error' in data:
+                # Выводим сообщение об ошибке
+                weather_label['text'] = f"Ошибка: {data['error']}"
+            else:
+                weather_label['text'] = (
+                    f"Город: {data['name']}\n"
+                    f"Погода: {data['weather'][0]['main']}\n"
+                    f"Температура: {data['main']['temp']}°C\n"
+                    f"Ощущается как: {data['main']['feels_like']}°C"
+                )
+        # Обрабатываем возможные ошибки при запросе
+        except requests.exceptions.RequestException as e:
+            weather_label['text'] = f"Ошибка: {e}"
 
-root['bg'] = '#fafafa'
-root.title('Погодное приложение')
-root.geometry('300x250')
-root.resizable(width=False, height=False)
+# главное окно
+root = Tk()
+root.title("Прогноз погоды")
 
-frame_top = Frame(root, bg='#ffb700', bd=5)
-frame_top.place(relx=0.15, rely=0.15, relwidth=0.7, relheight=0.25)
 
-frame_bottom = Frame(root, bg='#ffb700', bd=5)
-frame_bottom.place(relx=0.15, rely=0.55, relwidth=0.7, relheight=0.2)
+screen_width = root.winfo_screenwidth()
+screen_height = root.winfo_screenheight()
 
-cityField = Entry(frame_top, bg='white', font=30)
-cityField.pack()
 
-btn = Button(frame_top, text='Посмотреть погоду', command=get_weather)
-btn.pack()
+x = (screen_width - 350) // 2
+y = (screen_height - 200) // 2
 
-info = Label(frame_bottom, text='Погодная информация', bg='#ffb700', font=40)
-info.pack()
+# размер и позицию окна
+root.geometry(f"400x200+{x}+{y}")
+
+
+city_label = Label(root, text="Введите город:")
+city_label.pack(pady=10)
+
+
+city_entry = Entry(root)
+city_entry.pack(pady=5)
+
+# кнопка "Получить погоду"
+get_weather_button = Button(root, text="Получить прогноз", command=get_weather)
+get_weather_button.pack(pady=5)
+
+
+weather_label = Label(root, text="", justify="left", wraplength=300)
+weather_label.pack()
+
 
 root.mainloop()
