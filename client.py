@@ -1,23 +1,38 @@
+from tkinter import *
 import requests
 
-def get_weather_info(city):
-    try:
-        url = f"http://localhost:5000/weather?city={city}"
-        response = requests.get(url)
-        response.raise_for_status()
-        data = response.json()
+root = Tk()
 
-        if 'error' in data:
-            print(f"Error: {data['error']}")
-        else:
-            print(f"Город: {data['name']}")
-            print(f"Погода: {data['weather'][0]['main']}")
-            print(f"Температура: {data['main']['temp']}°C")
-            print(f"Ощущается как: {data['main']['feels_like']}°C")
+def get_weather():
+    city = cityField.get()
+    key = '642064cb0aec35f1a6712887b8ccc74a'
+    url = 'http://api.openweathermap.org/data/2.5/weather'
+    params = {'APPID': key, 'q': city, 'units': 'metric'}
+    result = requests.get(url, params=params)
+    weather = result.json()
 
-    except requests.exceptions.RequestException as e:
-        print(f"Error: {e}")
+    info['text'] = (f'{str(weather["name"])}: {weather["main"]["temp"]}°C\n',
+    f'{weather['weather'][0]['main']}: {weather['main']['feels_like']}°C')
 
-if __name__ == "__main__":
-    city = input("Введите город: ")
-    get_weather_info(city)
+
+root['bg'] = '#fafafa'
+root.title('Погодное приложение')
+root.geometry('300x250')
+root.resizable(width=False, height=False)
+
+frame_top = Frame(root, bg='#ffb700', bd=5)
+frame_top.place(relx=0.15, rely=0.15, relwidth=0.7, relheight=0.25)
+
+frame_bottom = Frame(root, bg='#ffb700', bd=5)
+frame_bottom.place(relx=0.15, rely=0.55, relwidth=0.7, relheight=0.2)
+
+cityField = Entry(frame_top, bg='white', font=30)
+cityField.pack()
+
+btn = Button(frame_top, text='Посмотреть погоду', command=get_weather)
+btn.pack()
+
+info = Label(frame_bottom, text='Погодная информация', bg='#ffb700', font=40)
+info.pack()
+
+root.mainloop()
