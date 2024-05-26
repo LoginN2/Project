@@ -10,10 +10,7 @@ def get_weather():
     params = {'APPID': key, 'q': city, 'units': 'metric'}
     result = requests.get(url, params=params)
     weather = result.json()
-
-    info['text'] = (f'{str(weather["name"])}: {weather["main"]["temp"]}°C\n',
-    f'{weather['weather'][0]['main']}: {weather['main']['feels_like']}°C')
-
+    info['text'] = f"{str(weather['name'])}: {weather['main']['temp']}°C\n{weather['weather'][0]['main']}: {weather['main']['feels_like']}°C"
 
 root['bg'] = '#fafafa'
 root.title('Погодное приложение')
